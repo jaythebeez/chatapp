@@ -1,0 +1,131 @@
+@font-face {
+  font-family: Latinka;
+  src: url(./assets/latinka/OTF/LatinkaMedium.otf);
+  font-style: normal;
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: Latinka;
+  src: url(./assets/latinka/OTF/LatinkaRegular.otf);
+  font-style: normal;
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: Latinka;
+  src: url(./assets/latinka/OTF/LatinkaBold.otf);
+  font-style: bold;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: Latinka;
+  src: url(./assets/latinka/OTF/LatinkaRegular.otf);
+  font-style: light;
+  font-weight: 300;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::after, *::before {
+  @apply box-border;
+  font-family: Latinka;
+}
+
+
+.nav-link {
+  @apply flex flex-col gap-[2px] items-center justify-center
+}
+
+.nav-link-img {
+  @apply h-[30px] w-[30px]
+}
+
+.nav-link-text {
+  @apply text-[10px]
+}
+
+.sub-nav-link {
+  @apply pb-4 px-2 font-body font-normal
+}
+
+.sub-nav-link.active {
+  @apply border-b-2 border-solid border-black font-bold translate-y-[2px];
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+
+.form_input {
+  @apply block w-full p-1 text-xl font-normal mb-4 text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none
+}
+
+.sender {
+  @apply ml-auto mb-2
+}
+
+.receiver {
+  @apply mr-auto mb-2
+}
+
+.active svg{
+  @apply fill-sky-600;
+}
+
+.active .nav-link-text{
+  @apply text-sky-600;
+}
+
+textarea::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+textarea {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.spinner {
+  position: absolute;
+  bottom: 10px;
+  right:10px;
+  border: 4px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  width: 30px;
+  height: 30px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
