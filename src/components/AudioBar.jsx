@@ -37,6 +37,8 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
         mediaRecorder.addEventListener('stop', function() {
             console.log("Recording has been stopped");  
             setStatus("stopped");
+            stream.getTracks() // get all tracks from the MediaStream
+            .forEach( track => track.stop() ); 
         });
 
         sendButton.current.addEventListener('click', (e)=>{
