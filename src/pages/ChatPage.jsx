@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {  useEffect, useState, useRef  } from "react";
 import { useSelector } from "react-redux";
 
-import moment from 'moment'
+import moment from 'moment';
 import PlusIcon from "../assets/icons/plus.svg";
 import CameraIcon from "../assets/icons/camera.svg"
 import MicIcon from "../assets/icons/mic.svg"
@@ -15,12 +15,14 @@ import ChatMessage from "../components/ChatMessage";
 import SendFile from "../components/SendFile";
 import AudioBar from "../components/AudioBar";
 import SkeletonChat from "../components/Skeletons/SkeletonChat";
+import SendIcon from "../assets/icons/send.svg"
 
 
 const ChatPage = () => {
     const { uid } = useSelector(state=>state.user.data.userData);
     const navigate = useNavigate();
     const { id:chatId } = useParams();
+    const InputField = useRef();
 
     const [dropdown, setDropdown] = useState(false);
     const [message, setMessage] = useState("");
@@ -31,10 +33,15 @@ const ChatPage = () => {
     const [chatData, setChatData] = useState({});
     const [time, setTime] = useState("");
     const [pending, setPending] = useState(true);
+    const [parsed, setParsed] = useState([])
 
     const chatContainer = useRef();
 
     const chatRef = doc(chatColRef, chatId);
+
+    const handleChange = (e) => {
+        setMessage(e.target.innerText);
+    }
 
     const handleDropDown = () => {
         setDropdown(dropdown=> !dropdown);
@@ -45,26 +52,25 @@ const ChatPage = () => {
 		reader.readAsDataURL(file);
         reader.onload = function (e) {
             const src = e.target.result;
+            const d = new Date();
+            const seconds = d.getSeconds();
+            const milli = d.getMilliseconds();
             setMessageList(message=> [{
                 message_type: "image",
                 message_data: src,
                 sender: uid,
-                status: "sending"
+                status: "sending",
+                createdAt:{
+                    seconds: seconds
+                }
             }, ...message])
         }
-
-        task.on('state_changed', 
-        (snapshot) => {
-          // Observe state change events such as progress, pause, and resume
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        })
-        
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const messageRef = await addDoc(messagesColRef,{
+        InputField.current.innerText = "";
+            await addDoc(messagesColRef,{
             chat_id: chatId,
             sender: uid,
             message_type: "text",
@@ -76,7 +82,7 @@ const ChatPage = () => {
             lastUpdatedType: "text",
             preview: message
         })
-        setMessage("")
+        setMessage("");
     }
 
     const goBack = () => {
@@ -106,7 +112,7 @@ const ChatPage = () => {
 
     const getMessages = async () => {
         try {
-            const checked = await checkUser();
+            await checkUser();
             const chatQuery = query(messagesColRef, where("chat_id", "==", chatId), orderBy("createdAt", "desc"), limit(30));
             onSnapshot(chatQuery, (snapshot)=>{
 
@@ -130,24 +136,51 @@ const ChatPage = () => {
         getMessages();
     },[uid])
 
+    const parseDate = (arr) => {
+        return arr.map(row => {
+            let date = moment(row.createdAt * 1000).format("MMMM Do");
+            return {...row, date}
+        })
+    }
+
+    const parseMessages = (arr) => {
+        let newArray = parseDate(arr);
+        let map = new Map();
+        let tempArray = [];
+        for(let i = 0; i < newArray.length ; i++) {
+            tempArray.push(newArray[i]);
+
+            if (i + 1 === newArray.length) {
+                map.set(newArray[i].date, tempArray);
+            }
+
+            else if (newArray[i].date !== newArray[i+1].date){
+                map.set(newArray[i].date, tempArray);
+                tempArray = [];
+            }
+        }
+        return map;
+    }
+
     useEffect(()=>{
         if (chatContainer.current.firstElementChild){
             chatContainer.current.firstElementChild.scrollIntoView(true);
-            console.log({element: chatContainer.current.firstElementChild})
         }
-    },[messageList])
+        setParsed(parseMessages(messageList));
 
-    console.log(chatData);
+    },[messageList])
 
     useEffect(()=>{
         if(chatData.query_id) {
-            console.log("here")
             if(chatData.lastUpdatedAt.seconds) {
-                console.trace("reched here")
                 setTime(moment(chatData.lastUpdatedAt.seconds * 1000).fromNow())
             }
         }
     },[chatData])
+
+    useEffect(()=>{
+        console.log(parsed)
+    })
 
     return ( 
         <>
@@ -162,9 +195,17 @@ const ChatPage = () => {
             </div>
 
             <div ref={chatContainer} id="chat-container" className="h-[calc(100vh-60px-55px)] overflow-y-auto flex flex-col-reverse p-2">
-                {messageList.map((item, i)=>(
-                    <ChatMessage key={i} data={item} />
-                ))}
+                {[...parsed.keys()].map((key, i)=>{
+                    return (
+                        <>
+                        {[...parsed.get(key)].map((value, i)=>(
+                            <ChatMessage data={value} key={i} />
+                        ))}
+                        <div className="mx-auto my-4 p-2 bg-cyan-200 rounded-xl">{key}</div>
+                        </>
+                    )
+                }         
+                )}
                 {(!messageList.length && pending) && [0,1,2,3,4].map((item,i)=>(
                     <SkeletonChat key={i} />
                 ))}
@@ -174,18 +215,26 @@ const ChatPage = () => {
             {recorder && <AudioBar setRecorder={setRecorder} chatRef={chatRef} chatId={chatId} uid={uid} />}
             {camera && <SendFile file={camera} setFile={setCamera} chatRef={chatRef} chatId={chatId} uid={uid} appendImage={appendImage} />}
 
-            <div id="footer" className="h-[55px] w-[100%] absolute bottom-0 left-0 p-2 bg-white">
-                <form onSubmit={handleSubmit}>
+            <div id="footer" className="min-h-[55px] w-[100%] absolute bottom-0 left-0 p-2 bg-white">
+                <form>
                     <div className="flex h-[100%] w-[100%] gap-2 items-center cursor-pointer">
-                        <span onClick={handleDropDown} ><img src={PlusIcon} className="nav-link-img"/></span>
-                        <span className="flex-grow">
-                            <input value={message} onChange={e=>setMessage(e.target.value)} className="p-2 w-[100%] h-[42px] rounded-3xl border-[1px] border-solid border-black" placeholder="Write your message here..."  />
+                        <span onClick={handleDropDown} ><img src={PlusIcon} className="nav-link-img shrink-0 w-[30px]"/></span>
+                        <span className="relative w-full">
+                            <div ref={InputField} contentEditable="true"  onInput={e=>handleChange(e)} className="inline-block p-2 px-3 w-full min-h-[42px] rounded-3xl border-[1px] border-solid border-black break-all max-h-[100px] overflow-auto" title="Write your message here..." innertext={message} ></div>
                         </span>
-                        <span>
-                            <label htmlFor="camera"><img src={CameraIcon} className="nav-link-img cursor-pointer" /> </label>
-                            <input type="file" capture="user" id="camera" className="hidden" accept="video/*,image/*" onChange={(e)=>setCamera(e.target.files[0])} />
-                        </span>
-                        <span onClick={()=>setRecorder(true)}><img src={MicIcon} className="nav-link-img cursor-pointer" /></span>
+                        {message.length ? (
+                            <div onClick={handleSubmit} className="shrink-0">
+                                <img src={SendIcon} className="w-[35px] h-[35px]" />
+                            </div>
+                        ) : (
+                            <>
+                            <span className="shrink-0 w-[30px]">
+                                <label htmlFor="camera"><img src={CameraIcon} className="nav-link-img cursor-pointer" /> </label>
+                                <input type="file" capture="user" id="camera" className="hidden" accept="video/*,image/*" onChange={(e)=>setCamera(e.target.files[0])} />
+                            </span>
+                            <span onClick={()=>setRecorder(true)} className="w-[30px] shrink-0"><img src={MicIcon} className="nav-link-img cursor-pointer" /></span>
+                            </>
+                        )}    
                     </div>
                 </form>
             </div>

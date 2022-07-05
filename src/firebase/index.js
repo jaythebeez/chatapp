@@ -6,15 +6,16 @@ import { initializeApp } from "firebase/app";
 
 //firebase congif files for obvious reasons I will not be sharing mine
 
+// // Your web app's Firebase configuration
 // const firebaseConfig = {
-//   apiKey: "",
-//   authDomain: "",
-//   projectId: "",
-//   storageBucket: "",
-//   messagingSenderId: "",
-//   appId: "",
-//   storageBucket: ""  You'll get this value after initializing firebase storage
-// };
+//     apiKey: ,
+//     authDomain: ,
+//     projectId: ,
+//     storageBucket: ,
+//     messagingSenderId: ,
+//     appId: ,
+//     storageBucket: 
+//   };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

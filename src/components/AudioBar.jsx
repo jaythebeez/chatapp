@@ -15,15 +15,16 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
 
     const [error, setError] = useState(null);
     const [status, setStatus] = useState("starting");
-    const [time, setTime] = useState(0);
 
     const closeButton = useRef();
     const sendButton = useRef();
 
+    let mediaRecorder;
+
     const handleSuccess = function (stream) {
         const options = {mimeType: 'audio/webm'};
         const recordedChunks = [];
-        const mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder = new MediaRecorder(stream, options);
     
         mediaRecorder.addEventListener('dataavailable', function(e) {
             if (e.data.size > 0) recordedChunks.push(e.data);
@@ -53,12 +54,6 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
             });
 
             setFile(audioFile);
-        })
-
-        closeButton.current.addEventListener('click', ()=>{
-            console.log("close button clicked");
-            mediaRecorder.stop();
-            closeAudioBar();
         })
     
         mediaRecorder.start(1000);
@@ -99,6 +94,10 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
           );
     }  
 
+    const handleClose = () => {
+        if (mediaRecorder) mediaRecorder.stop();
+        closeAudioBar();
+    }
     const savetoDb = async (url) => {
         try{
             await addDoc(messagesColRef, {
@@ -138,9 +137,17 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
 
     return (
     <div className="absolute bottom-0 left-0 h-[60px] w-full flex justify-between p-2 items-center z-30 bg-white gap-2">
-        <span ref={closeButton}><img src={CloseIcon} alt="Close" className="nav-link-img cursor-pointer" /></span>
-        <span className="overflow-hidden flex-grow">{status}</span>
-        <button ref={sendButton}><img src={SendIcon} alt="Send" className="nav-link-img cursor-pointer"/></button>
+        <span onClick={handleClose}><img src={CloseIcon} alt="Close" className="nav-link-img cursor-pointer" /></span>
+        {error ? (
+            <>
+                <span className="overflow-hidden flex-grow">{error}</span>
+            </>
+        ) : (
+            <>
+                <span className="overflow-hidden flex-grow">{status}</span>
+                <button ref={sendButton}><img src={SendIcon} alt="Send" className="nav-link-img cursor-pointer"/></button>
+            </>
+        )}
     </div>
     );
 }
