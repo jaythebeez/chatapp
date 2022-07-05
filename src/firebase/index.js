@@ -13,9 +13,8 @@ import { initializeApp } from "firebase/app";
 //     projectId: ,
 //     storageBucket: ,
 //     messagingSenderId: ,
-//     appId: ,
-//     storageBucket: 
-//   };
+//     appId: 
+// };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
