@@ -1,7 +1,6 @@
 import SendIcon from "../assets/icons/send.svg";
 import CloseIcon from "../assets/icons/close.svg";
 import { useEffect, useRef, useState } from "react";
-import useInterval from "../customHooks/useInterval";
 
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase/storage";
@@ -122,13 +121,18 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
     }
 
     useEffect(()=>{
-        navigator.mediaDevices
-        .getUserMedia({audio: true, video: false})
-        .then((stream)=> handleSuccess(stream))
-        .catch((err)=>{
-            console.log(err)
-            setError("Can not connect to microphone");
-        });
+        if(navigator.mediaDevices) {
+            navigator.mediaDevices
+            .getUserMedia({audio: true, video: false})
+            .then((stream)=> handleSuccess(stream))
+            .catch((err)=>{
+                console.log(err)
+                setError("Can not connect to microphone");
+            });
+        }
+        else {
+            setError("Can not connect to microphone")
+        }
     },[])
 
     useEffect(()=>{
