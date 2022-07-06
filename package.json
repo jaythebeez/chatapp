@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.2",
+    "audio-recorder-polyfill": "^0.4.1",
     "cra-template": "1.2.0",
     "firebase": "^9.8.4",
     "moment": "^2.29.3",

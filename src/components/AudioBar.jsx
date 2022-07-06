@@ -1,7 +1,7 @@
 import SendIcon from "../assets/icons/send.svg";
 import CloseIcon from "../assets/icons/close.svg";
 import { useEffect, useRef, useState } from "react";
-
+import AudioRecorder from 'audio-recorder-polyfill'
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase/storage";
 import { addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
@@ -9,40 +9,53 @@ import { messagesColRef } from "../firebase/firestore";
 import uniqid from 'uniqid';
 
 const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
-
-    const [file, setFile] = useState(null);
-
     const [error, setError] = useState(null);
     const [status, setStatus] = useState("starting");
 
-    const closeButton = useRef();
+    let closeButton = useRef();
     const sendButton = useRef();
 
-    let mediaRecorder;
+    const closeBar = (stream,recorder) => {
+        if(recorder) {
+            recorder.stop(); 
+        }
+        if(stream){
+            stream.getTracks() // get all tracks from the MediaStream
+            .forEach(track => track.stop());
+        }
+        closeAudioBar();
+    }
 
     const handleSuccess = function (stream) {
         const options = {mimeType: 'audio/webm'};
         const recordedChunks = [];
-        mediaRecorder = new MediaRecorder(stream, options);
+
+        window.MediaRecorder = AudioRecorder;
+        const mediaRecorder = new MediaRecorder(stream, options);
     
         mediaRecorder.addEventListener('dataavailable', function(e) {
             if (e.data.size > 0) recordedChunks.push(e.data);
-            console.log(e.data);
+            console.log(e.data.size)
         });
 
         mediaRecorder.addEventListener('start', e=>{
             setStatus("Recording");
         })
     
-        mediaRecorder.addEventListener('stop', function() {
-            console.log("Recording has been stopped");  
+        mediaRecorder.addEventListener('stop', function() { 
             setStatus("stopped");
+
             stream.getTracks() // get all tracks from the MediaStream
-            .forEach( track => track.stop() ); 
+            .forEach(track => track.stop()); 
         });
+
+        closeButton.current.addEventListener('click', e=>closeBar(stream,mediaRecorder));
 
         sendButton.current.addEventListener('click', (e)=>{
             e.target.style.display = "none";
+
+            stream.getTracks() // get all tracks from the MediaStream
+            .forEach(track => track.stop()); 
 
             mediaRecorder.stop();
 
@@ -52,14 +65,14 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
                 type: "audio/webm"
             });
 
-            setFile(audioFile);
+            handleClick(audioFile);
         })
     
         mediaRecorder.start(1000);
       };
 
-      const handleClick = () => {
-        const fileRef = ref(storage, `audios/${uniqid()}`);
+      const handleClick = (file) => {
+            const fileRef = ref(storage, `audios/${uniqid()}`);
 
             const uploadTask = uploadBytesResumable(fileRef, file);
 
@@ -93,10 +106,6 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
           );
     }  
 
-    const handleClose = () => {
-        if (mediaRecorder) mediaRecorder.stop();
-        closeAudioBar();
-    }
     const savetoDb = async (url) => {
         try{
             await addDoc(messagesColRef, {
@@ -110,7 +119,6 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
                 lastUpdatedAt: serverTimestamp(),
                 lastUpdatedType: "audio"
             })
-            setFile(null);
         } catch (err) {
             setError("Could not send File");
         }
@@ -120,28 +128,55 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
         setRecorder(false);
     }
 
+    const startAudio = () => {
+        // Older browsers might not implement mediaDevices at all, so we set an empty object first
+        if (navigator.mediaDevices === undefined) {
+            navigator.mediaDevices = {};
+          }
+          
+          // Some browsers partially implement mediaDevices. We can't just assign an object
+          // with getUserMedia as it would overwrite existing properties.
+          // Here, we will just add the getUserMedia property if it's missing.
+          if (navigator.mediaDevices.getUserMedia === undefined) {
+            navigator.mediaDevices.getUserMedia = function(constraints) {
+          
+              // First get ahold of the legacy getUserMedia, if present
+              const getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+          
+              // Some browsers just don't implement it - return a rejected promise with an error
+              // to keep a consistent interface
+              if (!getUserMedia) {
+                return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+              }
+          
+              // Otherwise, wrap the call to the old navigator.getUserMedia with a Promise
+              return new Promise(function(resolve, reject) {
+                getUserMedia.call(navigator, constraints, resolve, reject);
+              });
+            }
+          }
+          
+          navigator.mediaDevices.getUserMedia({ audio: true })
+          .then((stream)=>handleSuccess(stream))
+          .catch(function(err) {
+            setError("Can not connect to Microphone");
+            console.log(err);
+          });
+    }  
+
+    let start = false;
     useEffect(()=>{
-        if(navigator.mediaDevices) {
-            navigator.mediaDevices
-            .getUserMedia({audio: true, video: false})
-            .then((stream)=> handleSuccess(stream))
-            .catch((err)=>{
-                console.log(err)
-                setError("Can not connect to microphone");
-            });
-        }
-        else {
-            setError("Can not connect to microphone")
+        if(!start) {
+            start = true;
+            console.log('starting audio');
+            startAudio();
         }
     },[])
 
-    useEffect(()=>{
-        if(file) handleClick();
-    }, [file])
 
     return (
     <div className="absolute bottom-0 left-0 h-[60px] w-full flex justify-between p-2 items-center z-30 bg-white gap-2">
-        <span onClick={handleClose}><img src={CloseIcon} alt="Close" className="nav-link-img cursor-pointer" /></span>
+        <span ref={closeButton}><img src={CloseIcon} alt="Close" className="nav-link-img cursor-pointer" /></span>
         {error ? (
             <>
                 <span className="overflow-hidden flex-grow">{error}</span>

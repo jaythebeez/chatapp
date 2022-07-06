@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {  useEffect, useState, useRef  } from "react";
 import { useSelector } from "react-redux";
+import React from "react";
 
 import moment from 'moment';
 import PlusIcon from "../assets/icons/plus.svg";
@@ -197,12 +198,12 @@ const ChatPage = () => {
             <div ref={chatContainer} id="chat-container" className="h-[calc(100vh-60px-55px)] overflow-y-auto flex flex-col-reverse p-2">
                 {[...parsed.keys()].map((key, i)=>{
                     return (
-                        <>
+                        <React.Fragment key={i}>
                         {[...parsed.get(key)].map((value, i)=>(
                             <ChatMessage data={value} key={i} />
                         ))}
                         <div className="mx-auto my-4 p-2 bg-cyan-200 rounded-xl">{key}</div>
-                        </>
+                        </React.Fragment>
                     )
                 }         
                 )}

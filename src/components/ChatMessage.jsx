@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import moment from "moment";
+import uniqid from 'uniqid';
 
 import DownloadBtn from "../assets/icons/download.svg";
 import AudioPlayer from "./AudioPlayer";
@@ -83,7 +84,7 @@ const ChatMessage = ({data}) => {
     const renderVideo = (data) => {
         return (
             <div className={isSender ? "sender flex flex-col rounded-xl bg-slate-200 p-1" : "receiver flex flex-col rounded-xl bg-blue-200 p-1"} >
-                <video width="320" height="240" className="rounded-xl" controls="controls">
+                <video width="320" height="240" className="rounded-xl" controls="controls" preload="auto" id={uniqid()}>
                     <source src={data.message_data} type="video/mp4" />
                 </video>
                 <div className="text-end"><span className="text-[10px]">{time}</span></div>
