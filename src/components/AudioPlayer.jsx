@@ -67,7 +67,11 @@ const AudioPlayer = ({isSender, data}) => {
     useEffect(()=>{
         const date = moment(data.createdAt * 1000).format("h:mm a");
         setTime(date);
-    },[])
+    },[data])
+
+    useEffect(()=>{
+        console.log({data})
+    })
 
     function convertTime(value) {
         const sec = parseInt(value, 10); // convert value to number if it's string

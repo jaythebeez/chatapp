@@ -15,7 +15,7 @@ const ChatMessage = ({data}) => {
     useEffect(()=>{
         const date = moment(data.createdAt * 1000).format("h:mm a");
         setTime(date);
-    },[])
+    },[data])
 
     const handleExpand = (e) => {
         setOpen(false);

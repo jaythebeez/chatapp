@@ -168,7 +168,6 @@ const ChatPage = () => {
             chatContainer.current.firstElementChild.scrollIntoView(true);
         }
         setParsed(parseMessages(messageList));
-
     },[messageList])
 
     useEffect(()=>{
@@ -178,10 +177,6 @@ const ChatPage = () => {
             }
         }
     },[chatData])
-
-    useEffect(()=>{
-        console.log(parsed)
-    })
 
     return ( 
         <>
@@ -200,7 +195,7 @@ const ChatPage = () => {
                     return (
                         <React.Fragment key={i}>
                         {[...parsed.get(key)].map((value, i)=>(
-                            <ChatMessage data={value} key={i} />
+                            <ChatMessage data={value} key={value.docId} />
                         ))}
                         <div className="mx-auto my-4 p-2 bg-cyan-200 rounded-xl">{key}</div>
                         </React.Fragment>
