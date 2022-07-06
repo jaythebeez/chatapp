@@ -1,7 +1,6 @@
 import SendIcon from "../assets/icons/send.svg";
 import CloseIcon from "../assets/icons/close.svg";
 import { useEffect, useRef, useState } from "react";
-import AudioRecorder from 'audio-recorder-polyfill'
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../firebase/storage";
 import { addDoc, serverTimestamp, updateDoc } from "firebase/firestore";
@@ -16,7 +15,7 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
     const sendButton = useRef();
 
     const closeBar = (stream,recorder) => {
-        if(recorder) {
+        if(recorder && recorder.state !== "inactive") {
             recorder.stop(); 
         }
         if(stream){
@@ -30,12 +29,11 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
         const options = {mimeType: 'audio/webm'};
         const recordedChunks = [];
 
-        window.MediaRecorder = AudioRecorder;
         const mediaRecorder = new MediaRecorder(stream, options);
     
         mediaRecorder.addEventListener('dataavailable', function(e) {
             if (e.data.size > 0) recordedChunks.push(e.data);
-            console.log(e.data.size)
+            console.log(e.data)
         });
 
         mediaRecorder.addEventListener('start', e=>{
@@ -44,7 +42,6 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
     
         mediaRecorder.addEventListener('stop', function() { 
             setStatus("stopped");
-
             stream.getTracks() // get all tracks from the MediaStream
             .forEach(track => track.stop()); 
         });
@@ -53,9 +50,6 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
 
         sendButton.current.addEventListener('click', (e)=>{
             e.target.style.display = "none";
-
-            stream.getTracks() // get all tracks from the MediaStream
-            .forEach(track => track.stop()); 
 
             mediaRecorder.stop();
 
@@ -66,6 +60,9 @@ const AudioBar = ({setRecorder, chatRef, chatId, uid}) => {
             });
 
             handleClick(audioFile);
+
+            stream.getTracks() // get all tracks from the MediaStream
+            .forEach(track => track.stop()); 
         })
     
         mediaRecorder.start(1000);
