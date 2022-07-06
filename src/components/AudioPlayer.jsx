@@ -84,7 +84,7 @@ const AudioPlayer = ({isSender, data}) => {
     return ( 
         <>
         <div className={isSender ? "sender flex w-[60%] h-[50px] bg-slate-200 rounded p-[3px] pr-[10px] shrink-0" 
-            : "receiver flex w-[75%] h-[50px] bg-slate-200 rounded p-[3px] pr-[10px] shrink-0"}>
+            : "receiver flex w-[60%] h-[50px] bg-slate-200 rounded p-[3px] pr-[10px] shrink-0"}>
             <div className="flex flex-col justify-center h-full w-[100%]">
                 <div className="flex h-full w-[100%] items-center">
                     {status === "playing" ? (
